@@ -46,6 +46,15 @@ class SFClient:
                 matches.append(name)
         return sorted(set(matches))
 
+    def rest_get(self, path: str, params: dict[str, Any] | None = None) -> Any:
+        """GETs a non-OData SF REST endpoint (e.g. /rest/ecosystem/...) and
+        returns the parsed JSON body as-is. Shape varies by endpoint --
+        inspect the raw result before assuming a schema."""
+        url = path if path.startswith("http") else f"{self.config.base_url}{path}"
+        resp = requests.get(url, headers=self._headers(), params=params, timeout=60)
+        resp.raise_for_status()
+        return resp.json()
+
     def query_entity(
         self,
         entity_set: str,

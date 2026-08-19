@@ -7,8 +7,8 @@ Development.
 ## Known demo tenant values
 
 - Company ID: `SFCPART000185`
-- Login host: `pmsalesdemo8.successfactors.com` (data center 8 -- confirm the
-  matching API host in Admin Center, likely `api8.successfactors.com`)
+- Login host: `pmsalesdemo8.successfactors.com`
+- API host: `api40sales.sapsf.com`
 
 ## One-time admin setup (Admin Center, requires admin access)
 
@@ -60,6 +60,23 @@ keywords (`career`, `aspiration`, `cdp`) if nothing matches.
 
 ## Export
 
+**Growth Portfolio Export API (confirmed endpoint):**
+
+```bash
+python -m scripts.export_growth_portfolio_syncs
+# writes out/growth_portfolio_syncs_raw.json (raw response, for inspection)
+# and out/growth_portfolio_syncs.csv (if a record list is found)
+```
+
+This calls `GET /rest/ecosystem/wholeself/v1/growthPortfolioSyncs`. It's a
+REST endpoint, not OData, so its exact response/pagination shape wasn't
+guessed here -- the script dumps the raw JSON first so you can confirm the
+structure (record wrapper key, any sync/continuation cursor) and the
+flattening logic can be tightened once you've seen real output. Pass query
+params as `key=value` args, e.g. `fromDate=2026-01-01`.
+
+**Generic OData fallback (if you need other entities beyond the Export API):**
+
 ```bash
 python -m scripts.export_growth_portfolio <EntitySetName>
 # writes out/<EntitySetName>.csv
@@ -69,10 +86,12 @@ python -m scripts.export_growth_portfolio <EntitySetName>
 
 - `src/sf_auth.py` -- builds and signs the SAML assertion, exchanges it for
   a bearer token at `/oauth/token`.
-- `src/sf_client.py` -- thin OData v2 client (metadata fetch/search, paged
-  entity queries).
-- `scripts/discover_growth_entities.py` -- metadata keyword search.
-- `scripts/export_growth_portfolio.py` -- paged export to CSV.
+- `src/sf_client.py` -- OData v2 client (metadata fetch/search, paged entity
+  queries) plus a generic `rest_get` for non-OData endpoints.
+- `scripts/discover_growth_entities.py` -- OData metadata keyword search.
+- `scripts/export_growth_portfolio_syncs.py` -- calls the Growth Portfolio
+  Export REST API directly.
+- `scripts/export_growth_portfolio.py` -- generic OData entity export.
 
 ## Notes
 
